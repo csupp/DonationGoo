@@ -29,7 +29,7 @@ import (
     "fmt"
     "log"
     "strconv"
-    "strings"
+    
      "time"
      "math/rand"
     "github.com/hyperledger/fabric/core/chaincode/shim"
@@ -78,9 +78,9 @@ func (t *SimpleChaincode) createDonation(stub shim.ChaincodeStubInterface, args 
      var donation Donation
      
      r := rand.New(rand.NewSource(time.Now().UnixNano()))
-     ID = strconv.Itoa(r.Intn(10))
-      fmt.println("ID")
-     donation = Donation{Id: ID,Who: args[0],Rid: args[1],Money: args[2]}
+     ID := strconv.Itoa(r.Intn(10))
+      fmt.Println("ID")
+     donation = Donation{Id: ID,Who: args[0],Rid: args[1],Money: 10000}
      donationBytes,err :=json.Marshal(&donation)
      if err !=nil {
            fmt.Println("error creating donation" + donation.Id)
@@ -92,7 +92,7 @@ func (t *SimpleChaincode) createDonation(stub shim.ChaincodeStubInterface, args 
      
 }
 
-func(t *SimpleChaincode) Init(stub shim.ChaincodeStubInteface, function string, args []string) ([]byte, error) {
+func(t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
     if len(args) != 1 {
         return nil, errors.New("Incorrect number of arguments. Expecting 1")
     }
