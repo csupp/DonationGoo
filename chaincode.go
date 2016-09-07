@@ -73,14 +73,16 @@ func main() {
         fmt.Printf("Error starting Simple chaincode: %s", err)
     }
 }
-func (t *SimpleChaincode) createDonation(stub *shim.ChaincodeStub, args []string) ([]byte, error){
+func (t *SimpleChaincode) createDonation(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
      var err error
      var donation Donation
-     
+     var from , toId string
      r := rand.New(rand.NewSource(time.Now().UnixNano()))
      ID := strconv.Itoa(r.Intn(10))
       fmt.Println("ID")
-     donation = Donation{Id: ID,Who: args[0],Rid: args[1],Money: 10000}
+     from = args[0]
+     toId = args[1]
+     donation = Donation{Id: ID,Who: from,Rid: toId,Money: 10000}
      donationBytes,err :=json.Marshal(&donation)
      if err !=nil {
            fmt.Println("error creating donation" + donation.Id)
@@ -92,7 +94,7 @@ func (t *SimpleChaincode) createDonation(stub *shim.ChaincodeStub, args []string
      
 }
 
-func(t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+func(t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
     if len(args) != 1 {
         return nil, errors.New("Incorrect number of arguments. Expecting 1")
     }
@@ -114,7 +116,7 @@ func(t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args []
     return nil, nil
 }
 
-func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
    fmt.Println("invoke is running " + function)
 
 	// Handle different functions
@@ -126,7 +128,7 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 }
 
 
-func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
     fmt.Println("query is running " + function)
     // Handle different functions
     if function == "read" {                            //read a variable
@@ -138,7 +140,7 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
     return nil, errors.New("Received unknown function query")
 }
 
-func (t *SimpleChaincode) read(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
     log.Println("Get into read function")
  
     var key, jsonResp string
