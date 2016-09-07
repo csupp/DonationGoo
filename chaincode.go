@@ -73,7 +73,7 @@ func main() {
         fmt.Printf("Error starting Simple chaincode: %s", err)
     }
 }
-func (t *SimpleChaincode) createDonation(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
+func (t *SimpleChaincode) createDonation(stub *shim.ChaincodeStub, args []string) ([]byte, error){
      var err error
      var donation Donation
      var from , toId string
@@ -94,7 +94,7 @@ func (t *SimpleChaincode) createDonation(stub shim.ChaincodeStubInterface, args 
      
 }
 
-func(t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func(t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
     if len(args) != 1 {
         return nil, errors.New("Incorrect number of arguments. Expecting 1")
     }
@@ -116,7 +116,7 @@ func(t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string,
     return nil, nil
 }
 
-func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
    fmt.Println("invoke is running " + function)
 
 	// Handle different functions
@@ -128,7 +128,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 }
 
 
-func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
     fmt.Println("query is running " + function)
     // Handle different functions
     if function == "read" {                            //read a variable
@@ -140,7 +140,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
     return nil, errors.New("Received unknown function query")
 }
 
-func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *SimpleChaincode) read(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
     log.Println("Get into read function")
  
     var key, jsonResp string
