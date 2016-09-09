@@ -220,10 +220,7 @@ func (t *SimpleChaincode) createRequest(stub *shim.ChaincodeStub, args []string)
     str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     bytes := []byte(str)
     result := []byte{}
-    r,err := rand.New(rand.NewSource(time.Now().UnixNano()))
-     if err != nil { 
-           return nil,errors.New("failed to create random string")
-      }
+    r:= rand.New(rand.NewSource(time.Now().UnixNano()))
    for i := 0; i < 6; i++ {
       result = append(result, bytes[r.Intn(len(bytes))])
    }
