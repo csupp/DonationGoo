@@ -215,7 +215,7 @@ func (t *SimpleChaincode) createRequest(stub *shim.ChaincodeStub, args []string)
      
      var request Request
      var dl []string
-     var requestId =GetRandomIDString(6)
+     requestId :=GetRandomIDString(6)
      request = Request{Id: requestId, Who: name, Name: projectName, Description: description, ExpectedMoney: expectedMoney, CurrentMoney: 0, DonationList: dl}
      rj, err := json.Marshal(&request)
      if err != nil {
