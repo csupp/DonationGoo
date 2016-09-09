@@ -74,16 +74,19 @@ func main() {
         fmt.Printf("Error starting Simple chaincode: %s", err)
     }
 }
-func GetRandomIDString(length int) string{
+func GetRandomIDString(length int) (string,error){
     str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
    //str :="0123456789"
    bytes := []byte(str)
    result := []byte{}
-   r := rand.New(rand.NewSource(time.Now().UnixNano()))
+   r,err := rand.New(rand.NewSource(time.Now().UnixNano()))
+   if err != nil { 
+      return "",err
+   }
    for i := 0; i < length; i++ {
       result = append(result, bytes[r.Intn(len(bytes))])
    }
-   return string(result)
+   return result,nil
 }
 
 func(t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
