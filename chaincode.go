@@ -1,13 +1,9 @@
-
 /*
 Copyright IBM Corp. 2016 All Rights Reserved.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
-		 http://www.apache.org/licenses/LICENSE-2.0
-
+         http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,19 +23,18 @@ import (
     "errors"
     "encoding/json"
     "fmt"
-    "log"
     "strconv"
-    
-     "time"
-     "math/rand"
+
+    "log"
     "github.com/hyperledger/fabric/core/chaincode/shim"
 )
-
+var Dnprefix = "Dn:"
+var Perprefix = "Per:"
+var Reqprefix = "Req:"
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
-var idPrefix = "Dn:"
-var perPrefix = "P:"
+
 type Donation struct {
     Id string `json:"id"`
     Who string `json:"who"`
@@ -49,6 +44,7 @@ type Donation struct {
 
 type Request struct {
     Id string `json:"id"`
+    Who string `json:"who"`
     Name string  `json:"name"`
     Description string `json:"description"`
     ExpectedMoney int `json:"expectedMoney"`
@@ -64,6 +60,9 @@ type Person struct {
     MyDonations []string `json:"myDonations"`
 }
 
+type AllRequest struct {
+    AllRequests []Request `json:"allRequests"`
+}
 
 
 func main() {
@@ -73,68 +72,217 @@ func main() {
         fmt.Printf("Error starting Simple chaincode: %s", err)
     }
 }
-func (t *SimpleChaincode) createDonation(stub *shim.ChaincodeStub, args []string) ([]byte, error){
-     var err error
-     var donation Donation
-     var from , toId string
-     r := rand.New(rand.NewSource(time.Now().UnixNano()))
-     ID := strconv.Itoa(r.Intn(10))
-      fmt.Println("ID")
-     from = args[0]
-     toId = args[1]
-     donation = Donation{Id: ID,Who: from,Rid: toId,Money: 10000}
-     donationBytes,err :=json.Marshal(&donation)
-     if err !=nil {
-           fmt.Println("error creating donation" + donation.Id)
-           return nil, errors.New("Error creating donation " + donation.Id)
-     }
-    err = stub.PutState(idPrefix+donation.Id,donationBytes)
-    fmt.Println("Donation Done")
-    return nil, nil
-     
-}
 
 func(t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-    if len(args) != 1 {
-        return nil, errors.New("Incorrect number of arguments. Expecting 1")
-    }
+    
+    var allrsi []Request
+    allRs := AllRequest{AllRequests: allrsi}
+    allJson,_ := json.Marshal(&allRs)
+    stub.PutState("allRequests", allJson)
 
-    err := stub.PutState("hello_world", []byte(args[0]))
-    if err != nil {
-        return nil, err
-    }
-
-    var request Request
-    var donationLts []string
-    request = Request{Id: "rid", Name: "Donation Go", Description: "Wanna to go to University", ExpectedMoney: 10000, CurrentMoney: 0, DonationList: donationLts}
-    rjson, err := json.Marshal(&request)
-    if err != nil {
-        return nil, err
-    }
-    stub.PutState("requestid", rjson)
+    var names = [3]string{"Lucy", "Andy", "David"}
+    var MyReqs, MyDons []string
+    for _, v := range names {
+        var person Person
+        person = Person{Id: v, Name: v, MyRequests: MyReqs, MyDonations: MyDons}
+        pb, err := json.Marshal(&person)
+        if err != nil {
+            return nil, errors.New("failed to init persons' instance")
+        }
+        preKey := Perprefix + person.Id
+        stub.PutState(preKey, pb)
+    } 
     log.Println("init function has done!")
     return nil, nil
 }
 
 func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-   fmt.Println("invoke is running " + function)
 
-	// Handle different functions
-	if function == "createDonation" {													//initialize the chaincode state, used as reset
-		return t.createDonation(stub,args)
-	}
-	  fmt.Println("invoke did not find func: " + function)
+     if function == "createDonation" {
+         return t.createDonation(stub, args)
+     }
+
+     if function == "createRequest" {
+         return t.createRequest(stub, args)
+     }
      return nil, errors.New("Received unknown function invocation")
 }
 
+func (t *SimpleChaincode) createDonation(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+     //args: ["jack", "requestid", money] 
+     var from, toRid,dId string
+     var money int
+     var err error
+   
+     if len(args) != 3 {
+         return nil, errors.New("My createDonation. Incorrect number of arguments. Expecting 3")
+     }
+     from = args[0]
+     toRid = args[1]
+     money, err = strconv.Atoi(args[2])
+     if err != nil {
+        return nil, errors.New("money cannot convert to number")
+     }
+
+     var donation Donation
+     donation = Donation{Id: "donationid", Rid: toRid, Who: from, Money: money}
+     djson, err := json.Marshal(&donation)
+     if err != nil {
+        return nil, err
+     }
+     dId = Dnprefix+donation.Id
+     stub.PutState(dId, djson)
+     
+     
+     
+     var person Person
+     var myReqs, myDons []string
+    //  update person data
+     var perkey = Perprefix+ from
+     personByte, err := stub.GetState(perkey)
+     if personByte == nil {
+        person = Person{Id: from, Name: from, MyRequests: myReqs, MyDonations: myDons}
+        myDonations := person.MyDonations
+         if myDonations == nil {
+         myDonations = make([]string, 0)
+             }
+         myDonations = append(myDonations, donation.Id)
+         person.MyDonations = myDonations
+        perJson,err := json.Marshal(&person)
+        if err !=nil{
+            return nil, errors.New("failed to JSON person instance")    
+            }
+        stub.PutState(perkey,perJson)
+        } else {
+        err = json.Unmarshal(personByte, &person)
+        if err !=nil{
+            return nil, errors.New("failed to Unmarshal person instance")    
+        }
+        myDonations2 := person.MyDonations
+        if myDonations2 == nil {
+             myDonations2 = make([]string, 0)
+        }
+        myDonations2 = append(myDonations2, donation.Id)
+        person.MyDonations = myDonations2
+        perJson2,err := json.Marshal(&person)
+        if err !=nil{
+            return nil, errors.New("failed to JSON person instance")    
+            }
+        stub.PutState(perkey,perJson2)
+     } 
+     toReid := Reqprefix+ toRid 
+     requestByte, err := stub.GetState(toReid)
+     if err != nil {
+           return nil, errors.New("request did not exist")
+     }
+
+     var request Request
+     err = json.Unmarshal(requestByte, &request)
+     if err != nil {
+           return nil, errors.New("failed to Unmarshal request instance")
+     }
+     request.CurrentMoney += money
+     donationList := request.DonationList 
+     if donationList == nil {
+          donationList = make([]string, 0)
+     }
+     donationList = append(donationList, donation.Id)
+     request.DonationList = donationList
+     requestJson,err := json.Marshal(&request)
+        if err !=nil{
+            return nil, errors.New("failed to JSON person instance")    
+            }
+        stub.PutState(toReid,requestJson)
+    return nil, nil     
+}
+
+func (t *SimpleChaincode) createRequest(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+     //args: [jack, projectName, description, expectedMoney]
+     if len(args) != 4 {
+          return nil, errors.New("Incorrect number of arguments. Expecting 4")
+     }
+     var name, projectName, description string
+     var expectedMoney int
+     var err error
+     name = args[0]
+     projectName = args[1]
+     description = args[2]
+     expectedMoney, err = strconv.Atoi(args[3])
+     if err != nil {
+        return nil, errors.New("money cannot convert to number")
+     }
+     
+     var request Request
+     var dl []string
+     request = Request{Id: "requestid", Who: name, Name: projectName, Description: description, ExpectedMoney: expectedMoney, CurrentMoney: 0, DonationList: dl}
+     rj, err := json.Marshal(&request)
+     if err != nil {
+            return nil, errors.New("failed to Marshal request instance")    
+     }
+     var rkey string
+     rkey = Perprefix + request.Id
+     stub.PutState(rkey, rj)
+
+
+     perkey := Perprefix + request.Who
+     personByte, err := stub.GetState(perkey)
+     if err !=nil{
+         return nil, errors.New("failed to get person instance")    
+     }
+     var person Person
+     var myReqs, myDons []string
+     if personByte == nil {
+         person = Person{Id: name, Name: name, MyRequests: myReqs, MyDonations: myDons}
+     } else {
+        err := json.Unmarshal(personByte, &person)
+        if err !=nil{
+            return nil, errors.New("failed to Unmarshal person instance")    
+        }
+     }
+     myRes := person.MyRequests
+     if myRes == nil {
+        myRes = make([]string, 0)
+     }
+     myRes = append(myRes, request.Id)
+     person.MyRequests = myRes
+     pj,_ := json.Marshal(person)
+     pkey := Perprefix + person.Id
+     stub.PutState(pkey, pj)
+
+     allJson, _ := stub.GetState("allRequests")
+     var allrs3 AllRequest
+     err = json.Unmarshal(allJson, &allrs3)
+     if err != nil {
+         return nil, errors.New("failed to Unmarshal AllRequest instance")    
+     }
+     allRs2 := allrs3.AllRequests
+     if allRs2 == nil {
+         allRs2 = []Request{}
+     }
+     allRs2 = append(allRs2, request)
+     allrs3.AllRequests = allRs2
+     allJson2,_ := json.Marshal(&allrs3)
+     stub.PutState("allRequests", allJson2)
+     
+     return nil, nil
+}
+
+
+
 
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-    fmt.Println("query is running " + function)
+    log.Println("query is running " + function)
+    log.Println(function)
+    log.Println(args[0])
     // Handle different functions
     if function == "read" {                            //read a variable
         return t.read(stub, args)
     }
     
+    if function == "getAllRequest" {
+        return t.getAllRequest(stub, args)
+    }
+
     fmt.Println("query did not find func: " + function)
 
     return nil, errors.New("Received unknown function query")
@@ -157,4 +305,15 @@ func (t *SimpleChaincode) read(stub *shim.ChaincodeStub, args []string) ([]byte,
     }
 
     return valAsbytes, nil
+}
+
+func (t *SimpleChaincode) getAllRequest(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+
+    allJson, err := stub.GetState("allRequests")
+
+    if err != nil {
+        return nil, errors.New("failed to get All Requests") 
+    }
+    
+    return allJson, nil
 }
