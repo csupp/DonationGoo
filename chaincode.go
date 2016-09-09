@@ -64,6 +64,16 @@ type Person struct {
 type AllRequest struct {
     AllRequests []Request `json:"allRequests"`
 }
+
+
+
+func main() {
+    err := shim.Start(new(SimpleChaincode))
+    
+    if err != nil {
+        fmt.Printf("Error starting Simple chaincode: %s", err)
+    }
+}
 func GetRandomIDString(length int) string{
     str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
    //str :="0123456789"
@@ -74,14 +84,6 @@ func GetRandomIDString(length int) string{
       result = append(result, bytes[r.Intn(len(bytes))])
    }
    return string(result)
-}
-
-func main() {
-    err := shim.Start(new(SimpleChaincode))
-    
-    if err != nil {
-        fmt.Printf("Error starting Simple chaincode: %s", err)
-    }
 }
 
 func(t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
