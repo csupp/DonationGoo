@@ -24,7 +24,8 @@ import (
     "encoding/json"
     "fmt"
     "strconv"
-
+    "math/rand"
+    "time"
     "log"
     "github.com/hyperledger/fabric/core/chaincode/shim"
 )
@@ -214,7 +215,8 @@ func (t *SimpleChaincode) createRequest(stub *shim.ChaincodeStub, args []string)
      
      var request Request
      var dl []string
-     request = Request{Id: "requestid", Who: name, Name: projectName, Description: description, ExpectedMoney: expectedMoney, CurrentMoney: 0, DonationList: dl}
+     var requestId =GetRandomIDString(6)
+     request = Request{Id: requestId, Who: name, Name: projectName, Description: description, ExpectedMoney: expectedMoney, CurrentMoney: 0, DonationList: dl}
      rj, err := json.Marshal(&request)
      if err != nil {
             return nil, errors.New("failed to Marshal request instance")    
@@ -306,7 +308,17 @@ func (t *SimpleChaincode) read(stub *shim.ChaincodeStub, args []string) ([]byte,
 
     return valAsbytes, nil
 }
-
+func GetRandomIDString(length int) string{
+    str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+   //str :="0123456789"
+   bytes := []byte(str)
+   result := []byte{}
+   r := rand.New(rand.NewSource(time.Now().UnixNano()))
+   for i := 0; i < length; i++ {
+      result = append(result, bytes[r.Intn(len(bytes))])
+   }
+   return string(result)
+}
 func (t *SimpleChaincode) getAllRequest(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
 
     allJson, err := stub.GetState("allRequests")
