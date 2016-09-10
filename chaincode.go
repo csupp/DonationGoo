@@ -18,11 +18,9 @@ package main
 //to be modified as well with the new ID of chaincode_example02.
 //chaincode_example05 show's how chaincode ID can be passed in as a parameter instead of
 //hard-coding.
-//
 
 import (
     "errors"
-    
     "encoding/json"
     "fmt"
     "strconv"
@@ -214,20 +212,20 @@ func (t *SimpleChaincode) createDonation(stub *shim.ChaincodeStub, args []string
          return nil, errors.New("failed to Unmarshal AllRequest instance")    
     }
     reques := allR.AllRequests
-    for _,v := range reques { 
-        if ((string)v.Id == (string)request.Id){
-            v.CurrentMoney += money
-            dl2 := v.DonationList
+    for i := 0; i < len(reques); i++ { 
+        if reques[i].Id == request.Id { 
+            reques[i].CurrentMoney += money
+            dl2 := reques[i].DonationList
             if dl2 == nil {
                 dl2 = make([]string, 0)
             }
             dl2 = append(dl2, donationId)
-            v.DonationList = dl2
+            reques[i].DonationList = dl2
             break
         }
     }
     allR.AllRequests = reques
-    requesJson,_ := json.Marshal(&allR)
+    requesJson,err := json.Marshal(&allR)
     stub.PutState("allRequests", requesJson)
     return nil, nil     
 }
