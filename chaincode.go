@@ -214,7 +214,8 @@ func (t *SimpleChaincode) createDonation(stub *shim.ChaincodeStub, args []string
     }
     reques := allR.AllRequests
     for _,v := range reques { 
-        if (strings.EqualFold(v.Id, request.Id)) {
+        isEqu := strings.EqualFold(v.Id, request.Id)
+        if isEqu == true {
             v.CurrentMoney += money
             dl2 := v.DonationList
             if dl2 == nil {
