@@ -298,10 +298,6 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
     if function == "read" {                            //read a variable
         return t.read(stub, args)
     }
-    
-    if function == "getAllRequest" {
-        return t.getAllRequest(stub, args)
-    }
 
     fmt.Println("query did not find func: " + function)
 
