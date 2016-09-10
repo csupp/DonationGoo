@@ -128,7 +128,16 @@ func (t *SimpleChaincode) createDonation(stub *shim.ChaincodeStub, args []string
      }
 
      var donation Donation
-     donation = Donation{Id: "donationid", Rid: toRid, Who: from, Money: money}
+     var dl []string
+    str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    bytes := []byte(str)
+    result := []byte{}
+    r:= rand.New(rand.NewSource(time.Now().UnixNano()))
+   for i := 0; i < 6; i++ {
+      result = append(result, bytes[r.Intn(len(bytes))])
+   }
+     donationId :=string(result)
+     donation = Donation{Id: donationId, Rid: toRid, Who: from, Money: money}
      djson, err := json.Marshal(&donation)
      if err != nil {
         return nil, err
@@ -318,13 +327,4 @@ func (t *SimpleChaincode) read(stub *shim.ChaincodeStub, args []string) ([]byte,
     return valAsbytes, nil
 }
 
-func (t *SimpleChaincode) getAllRequest(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
 
-    allJson, err := stub.GetState("allRequests")
-
-    if err != nil {
-        return nil, errors.New("failed to get All Requests") 
-    }
-    
-    return allJson, nil
-}
