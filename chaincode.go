@@ -22,7 +22,7 @@ package main
 
 import (
     "errors"
-    "strings"
+    
     "encoding/json"
     "fmt"
     "strconv"
@@ -215,8 +215,7 @@ func (t *SimpleChaincode) createDonation(stub *shim.ChaincodeStub, args []string
     }
     reques := allR.AllRequests
     for _,v := range reques { 
-        isEqu := strings.EqualFold(v.Id, request.Id)
-        if isEqu == true {
+        if ((string)v.Id == (string)request.Id){
             v.CurrentMoney += money
             dl2 := v.DonationList
             if dl2 == nil {
@@ -228,7 +227,7 @@ func (t *SimpleChaincode) createDonation(stub *shim.ChaincodeStub, args []string
         }
     }
     allR.AllRequests = reques
-    requesJson,err := json.Marshal(&allR)
+    requesJson,_ := json.Marshal(&allR)
     stub.PutState("allRequests", requesJson)
     return nil, nil     
 }
