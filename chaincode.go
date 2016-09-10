@@ -128,7 +128,6 @@ func (t *SimpleChaincode) createDonation(stub *shim.ChaincodeStub, args []string
      }
 
      var donation Donation
-     var dl []string
     str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     bytes := []byte(str)
     result := []byte{}
