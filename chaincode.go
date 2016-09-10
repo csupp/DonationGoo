@@ -262,7 +262,7 @@ func (t *SimpleChaincode) createRequest(stub *shim.ChaincodeStub, args []string)
             return nil, errors.New("failed to Marshal request instance")    
      }
      var rkey string
-     rkey = Reqprefix + request.Id
+     rkey = Perprefix + request.Id
      stub.PutState(rkey, rj)
 
 
